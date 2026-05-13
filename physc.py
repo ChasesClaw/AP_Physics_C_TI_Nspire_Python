@@ -934,12 +934,14 @@ def solve_knowns(ks):
  for k in sorted(ks):print(k+" = "+str(ks[k]))
 
 def smart_quick():
- print("Enter knowns like m=5,v0=0,a=2")
- print("Symbols are ok too: mass=m,k=k,x=x")
+ print("Type all known values on one line.")
+ print("Example: m=5,v0=0,t=10,x0=0,x=5")
+ print("Symbol example: mass=m,k=k,x=x")
+ print("Leave blank and press Enter when done.")
  print("Use Wnc for nonconservative work.")
  ks={}
  while True:
-  try:s=input("knowns blank=solve: ").strip()
+  try:s=input("knowns line: ").strip()
   except EOFError:break
   if s=="":break
   add_knowns(ks,s)
@@ -957,7 +959,8 @@ def smart_guided():
    for v in g:
     if v not in vs:vs.append(v)
  else:vs=list(VG[c][1])
- print("Enter a number, a symbol like m, or blank if unknown.")
+ print("For each prompt: type a number, a symbol, or blank.")
+ print("Examples: 5, pi/6, m, k, or blank if unknown.")
  ks={}
  for v in vs:
   try:s=input(v+" "+VN.get(v,"")+": ").strip()
@@ -968,7 +971,7 @@ def smart_guided():
 def smart_num():
  while True:
   c=menu("Knowns solver",[
-   ("guided variable list",1),("quick knowns line",2),
+   ("guided prompts",1),("type knowns line",2),
    ("Back",0)])
   if c==0:return
   if c==1:smart_guided()
@@ -1011,7 +1014,7 @@ def choose_target_eq(v):
  return menu("Path for "+v,opts)
 
 def ask_given(ks,v):
- s=input(v+" "+VN.get(v,"")+" blank=solve: ").strip()
+ s=input(v+" "+VN.get(v,"")+"; value or Enter if unknown: ").strip()
  if s!="":
   if "=" in s:add_knowns(ks,s)
   else:set_known(ks,v,s)
@@ -1047,6 +1050,8 @@ def solve_target_var(v,ks,depth):
 def smart_target():
  ks={}
  print("Examples: v, a, x, F/force, W, K, p, T/period")
+ print("After you choose a path, enter values like 5 or pi/6.")
+ print("You may also enter symbols like m or k.")
  target=nk(input("What variable do you want? ").strip())
  if target=="":return
  print("If a needed value is unknown, press Enter.")
@@ -1078,10 +1083,12 @@ def has_all(s,ws):
  return True
 
 def smart_back():
- print("Paste the answer you were given.")
- print("Then describe the situation in a few words.")
+ print("Use this when the answer is already given.")
+ print("Paste the answer formula, then add context.")
+ print("Answer examples: d=h/mu, v=x*sqrt(k/m)")
+ print("Context examples: rough ramp stopping, spring launch")
  ans=clean(input("answer formula: "))
- giv=input("problem type optional: ").lower()
+ giv=input("problem type/context optional: ").lower()
  s=ans+" "+giv
  hits=0
  if "h/mu" in ans or "h/muk" in ans:
@@ -1144,7 +1151,16 @@ def smart_back():
   smart_deriv()
 
 def smart_deriv():
+ print("Describe the problem in plain words or variables.")
+ print("Givens examples:")
+ print(" spring compressed x, mass m")
+ print(" collision, objects stick")
+ print(" rolling disk from height h")
+ print(" force-time graph, impulse J")
  giv=input("givens/keywords: ").lower()
+ print("Goal examples:")
+ print(" derive speed, find graph slope, compare periods")
+ print(" show vf, show friction distance, choose method")
  goal=input("goal: ").lower()
  s=giv+" "+goal
  hits=0

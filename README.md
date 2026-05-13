@@ -47,7 +47,7 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 
 ### Smart solver
 
-All-from-givens mode can either prompt you through a variable list or accept known values on one line:
+All-from-givens mode can either prompt you through a variable list or accept known values on one line. For the guided prompts, type a number, a symbol, or leave the prompt blank if that value is unknown. For the one-line input, type comma-separated knowns and then press Enter on a blank line when done:
 
 ```
 m=5,v0=0,a=2,t=4
@@ -61,9 +61,9 @@ mass=m,k=k,x=x
 
 Then it chains through common Mechanics equations. If the values are numeric, it prints computed answers. If some values are symbols, it prints formula paths it can build from the givens. Use `Wnc` for nonconservative work.
 
-Solve-one-target mode asks what variable you want, lets you pick a path for it, then prompts only for the values that path needs. If a needed value is unknown, press Enter and the program tries to solve that missing value first before returning to the original target.
+Solve-one-target mode asks what variable you want. You can type targets like `v`, `a`, `x`, `F`, `force`, `W`, `K`, `p`, `T`, or `period`. It then shows each possible path with the required inputs, such as `Newton 2nd law: Fnet=m*a need m,a`. After you choose a path, enter numbers like `5` or `pi/6`, symbols like `m`, or press Enter if the value is unknown. If a needed value is unknown, the program tries to solve that missing value first before returning to the original target.
 
-Derivation mode asks for givens/keywords and a goal, then suggests useful principle paths such as energy, momentum/impulse, graph linearization, rolling constraints, oscillation proportionality, and MCQ checks.
+Derivation mode asks for givens/keywords and a goal. Use plain words or variables, for example `spring compressed x, mass m`, `collision, objects stick`, `rolling disk from height h`, or `force-time graph, impulse J`. Goal examples include `derive speed`, `find graph slope`, `compare periods`, `show vf`, or `show friction distance`. It then suggests useful principle paths such as energy, momentum/impulse, graph linearization, rolling constraints, oscillation proportionality, and MCQ checks.
 
 Backward proof mode asks for a given answer/expression, such as `d=h/mu` or `v=x*sqrt(k/m)`, plus an optional plain-language problem type. It matches common AP Mechanics forms and prints the steps that connect the givens to that answer.
 
