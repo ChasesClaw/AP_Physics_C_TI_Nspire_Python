@@ -41,6 +41,26 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 
 ## Main menu
 
+1. Smart solver — choose variable/numeric solving, derivation guidance, or backward proof
+2. Full equation menus — opens the older topic menus
+3. Quit
+
+### Smart solver
+
+Variable/numeric mode accepts known values such as:
+
+```
+m=5,v0=0,a=2,t=4
+```
+
+Then it chains through common Mechanics equations and prints every new value it can find. Use `Wnc` for nonconservative work.
+
+Derivation mode asks for givens/keywords and a goal, then suggests useful principle paths such as energy, momentum/impulse, graph linearization, rolling constraints, oscillation proportionality, and MCQ checks.
+
+Backward proof mode asks for a given answer/expression, such as `d=h/mu` or `v=x*sqrt(k/m)`, plus optional givens/keywords. It matches common AP Mechanics forms and prints the steps that connect the givens to that answer.
+
+### Full equation menus
+
 1. Kinematics — v, x, a, t, projectile, **rolling v(h)**
 2. Forces — Fnet, normal, friction, incline, spring, Atwood, banking, loop, drag
 3. Energy/Work/Power — W, K, U_g, U_s, P, work–KE, conservation, rolling K, **x from spring U**
@@ -50,7 +70,7 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 7. Gravitation — F, g, U, v_orbit, T_orbit, v_esc, total bound-orbit energy
 8. Calculus tools — ∫F(t)dt, ∫F(x)dx, ∫F(t)v(t)dt, ∫a(t)dt, ∫v(t)dt, df/du, **d²f/du²**, U from F, F from U
 9. Derivation helpers — reusable symbolic setup, graph, and MCQ reasoning patterns
-10. Quit
+10. Back
 
 ## How chained solving works
 

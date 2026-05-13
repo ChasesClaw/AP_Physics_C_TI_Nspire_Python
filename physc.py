@@ -766,6 +766,214 @@ def fit_xy():
  b=(sy-a*sx)/n
  show("slope",a);show("intercept",b)
 
+def nk(k):return k.replace("_","")
+
+def add_knowns(ks,s):
+ s=s.replace(";",",")
+ for p in s.split(","):
+  p=p.strip()
+  if "=" in p:
+   a,b=p.split("=",1)
+   try:ks[nk(a.strip())]=float(eval(fixexpr(b.strip()),NAMES))
+   except:print("? "+p)
+
+def req(ks,rs):
+ for r in rs:
+  if nk(r) not in ks:return False
+ return True
+
+def val(ks,k):return ks[nk(k)]
+
+def put(ks,out,v,ans,why):
+ if v!=v or v==float("inf") or v==-float("inf"):return
+ out=nk(out)
+ if out not in ks:
+  ks[out]=v;ans.append((out,v,why))
+
+def smart_eqs():
+ return [
+ ("a",("Fnet","m"),lambda k:val(k,"Fnet")/val(k,"m"),"a=Fnet/m"),
+ ("Fnet",("m","a"),lambda k:val(k,"m")*val(k,"a"),"Fnet=m*a"),
+ ("v",("v0","a","t"),lambda k:val(k,"v0")+val(k,"a")*val(k,"t"),"v=v0+a*t"),
+ ("x",("x0","v0","a","t"),lambda k:val(k,"x0")+val(k,"v0")*val(k,"t")+.5*val(k,"a")*val(k,"t")**2,"x=x0+v0*t+.5*a*t^2"),
+ ("a",("v","v0","t"),lambda k:(val(k,"v")-val(k,"v0"))/val(k,"t"),"a=(v-v0)/t"),
+ ("K",("m","v"),lambda k:.5*val(k,"m")*val(k,"v")**2,"K=.5*m*v^2"),
+ ("v",("K","m"),lambda k:sqrt(2*val(k,"K")/val(k,"m")),"speed=sqrt(2K/m)"),
+ ("p",("m","v"),lambda k:val(k,"m")*val(k,"v"),"p=m*v"),
+ ("J",("Favg","dt"),lambda k:val(k,"Favg")*val(k,"dt"),"J=Favg*dt"),
+ ("vf",("v0","J","m"),lambda k:val(k,"v0")+val(k,"J")/val(k,"m"),"vf=v0+J/m"),
+ ("W",("F","d","theta"),lambda k:val(k,"F")*val(k,"d")*cos(val(k,"theta")),"W=F*d*cos(theta)"),
+ ("P",("W","t"),lambda k:val(k,"W")/val(k,"t"),"P=W/t"),
+ ("Ug",("m","y"),lambda k:val(k,"m")*g*val(k,"y"),"Ug=m*g*y"),
+ ("Us",("k","x"),lambda k:.5*val(k,"k")*val(k,"x")**2,"Us=.5*k*x^2"),
+ ("x",("Us","k"),lambda k:sqrt(2*val(k,"Us")/val(k,"k")),"spring x=sqrt(2Us/k)"),
+ ("Kf",("Ki","Ui","Wnc","Uf"),lambda k:val(k,"Ki")+val(k,"Ui")+val(k,"Wnc")-val(k,"Uf"),"Kf=Ki+Ui+Wnc-Uf"),
+ ("v",("Kf","m"),lambda k:sqrt(2*val(k,"Kf")/val(k,"m")),"speed from final K"),
+ ("Tspring",("m","k"),lambda k:2*pi*sqrt(val(k,"m")/val(k,"k")),"T=2pi*sqrt(m/k)"),
+ ("Tpend",("L",),lambda k:2*pi*sqrt(val(k,"L")/g),"T=2pi*sqrt(L/g)"),
+ ("omega",("k","m"),lambda k:sqrt(val(k,"k")/val(k,"m")),"omega=sqrt(k/m)"),
+ ("ac",("v","r"),lambda k:val(k,"v")**2/val(k,"r"),"a_c=v^2/r"),
+ ("v",("omega","r"),lambda k:val(k,"omega")*val(k,"r"),"v=omega*r"),
+ ("Krot",("I","omega"),lambda k:.5*val(k,"I")*val(k,"omega")**2,"Krot=.5*I*omega^2"),
+ ("Lrot",("I","omega"),lambda k:val(k,"I")*val(k,"omega"),"L=I*omega"),
+ ("vorb",("M","r"),lambda k:sqrt(GC*val(k,"M")/val(k,"r")),"v_orbit=sqrt(GM/r)"),
+ ("vesc",("M","r"),lambda k:sqrt(2*GC*val(k,"M")/val(k,"r")),"v_esc=sqrt(2GM/r)"),
+ ("vroll",("m","h","r","I"),lambda k:sqrt(2*g*val(k,"h")/(1+val(k,"I")/(val(k,"m")*val(k,"r")**2))),"rolling speed from height")]
+
+def smart_num():
+ print("Enter knowns like m=5,v0=0,a=2")
+ print("Use Wnc for nonconservative work.")
+ ks={}
+ while True:
+  s=input("knowns blank=solve: ").strip()
+  if s=="":break
+  add_knowns(ks,s)
+ ans=[]
+ for _ in range(6):
+  n=len(ans)
+  for out,rs,fn,why in smart_eqs():
+   if nk(out) not in ks and req(ks,rs):
+    try:put(ks,out,fn(ks),ans,why)
+    except:pass
+  if len(ans)==n:break
+ if ans:
+  print("Can solve:")
+  for a,b,w in ans:print(a+" = "+str(b)+"  from "+w)
+ else:
+  print("No new values from those knowns.")
+ print("Known now:")
+ for k in sorted(ks):print(k+" = "+str(ks[k]))
+
+def has_any(s,ws):
+ for w in ws:
+  if w in s:return True
+ return False
+
+def print_path(title,lines):
+ print("")
+ print(title)
+ for l in lines:print(l)
+
+def clean(s):
+ s=s.lower().replace(" ","").replace("*","")
+ s=s.replace("sqrt","r").replace("omega","w")
+ return s
+
+def has_all(s,ws):
+ for w in ws:
+  if w not in s:return False
+ return True
+
+def smart_back():
+ ans=clean(input("given answer/expression: "))
+ giv=input("givens/keywords optional: ").lower()
+ s=ans+" "+giv
+ hits=0
+ if "h/mu" in ans or "h/muk" in ans:
+  hits+=1;print_path("Back path: stopping distance",[
+  "Target looks like distance from height/friction.",
+  "Use energy: initial Ug = work lost to friction.",
+  "m*g*h = mu_k*m*g*d",
+  "Cancel m and g: h = mu_k*d",
+  "Solve for d: d = h/mu_k"])
+ if has_all(ans,("x","r(k/m)")) or has_all(ans,("x","r(k","m)")):
+  hits+=1;print_path("Back path: spring speed",[
+  "Target looks like v from spring energy.",
+  "Use conservation: Us_i = K_f",
+  ".5*k*x^2 = .5*m*v^2",
+  "Cancel .5 and solve:",
+  "v = x*sqrt(k/m)"])
+ if has_all(ans,("r(2","k","m")) or has_all(ans,("r(2k","m")):
+  hits+=1;print_path("Back path: speed from energy",[
+  "Target looks like v=sqrt(2K/m).",
+  "Start with K=.5*m*v^2",
+  "2K=m*v^2",
+  "v=sqrt(2K/m)",
+  "Use sign separately for direction."])
+ if "2pi" in ans and "r(m/k)" in ans:
+  hits+=1;print_path("Back path: spring period",[
+  "Target is spring SHM period.",
+  "Use omega=sqrt(k/m).",
+  "T=2*pi/omega",
+  "T=2*pi*sqrt(m/k)"])
+ if "2pi" in ans and "r(l/g)" in ans:
+  hits+=1;print_path("Back path: pendulum period",[
+  "Target is small-angle pendulum period.",
+  "Use omega=sqrt(g/L).",
+  "T=2*pi/omega",
+  "T=2*pi*sqrt(L/g)"])
+ if has_all(ans,("r(2gh","1+i")) or "vroll" in giv:
+  hits+=1;print_path("Back path: rolling speed",[
+  "Target looks like rolling from height.",
+  "Use mgh=.5*m*v^2+.5*I*w^2",
+  "No slip: w=v/R",
+  "mgh=.5*(m+I/R^2)*v^2",
+  "v=sqrt(2gh/(1+I/(mR^2)))"])
+ if "fmax" in ans or ("j" in ans and "cos" in ans):
+  hits+=1;print_path("Back path: force-time pulse",[
+  "Target looks like impulse from a sine force.",
+  "Use J=int F(t)dt.",
+  "If F=Fmax*sin(A*t):",
+  "J=Fmax*(1-cos(A*T))/A",
+  "Solve: Fmax=A*J/(1-cos(A*T))"])
+ if "vf" in ans and ("/" in ans or "m1" in ans):
+  hits+=1;print_path("Back path: inelastic collision",[
+  "Target looks like final velocity after collision.",
+  "Use momentum conservation.",
+  "m1*v1i+m2*v2i=(m1+m2)*vf",
+  "vf=(m1*v1i+m2*v2i)/(m1+m2)"])
+ if hits==0:
+  smart_deriv()
+
+def smart_deriv():
+ giv=input("givens/keywords: ").lower()
+ goal=input("goal: ").lower()
+ s=giv+" "+goal
+ hits=0
+ if has_any(s,("collision","momentum","impulse","force time","change momentum","vf")):
+  hits+=1;print_path("Momentum/Impulse",[
+  "Choose + direction.",
+  "If external impulse is zero: sum p_i=sum p_f.",
+  "For impulse: J=int F(t)dt=m*(vf-vi).",
+  "If objects stick: m1v1i+m2v2i=(m1+m2)vf."])
+ if has_any(s,("energy","spring","speed","height","friction","work","kinetic")):
+  hits+=1;print_path("Energy",[
+  "Start: Ki+Ui+W_nc=Kf+Uf.",
+  "Use Ug=mgy and Us=.5kx^2.",
+  "Friction work usually W_f=-mu_k*N*d.",
+  "Solve .5*m*v^2=remaining energy."])
+ if has_any(s,("graph","experiment","slope","linear","linearize","mu","gravity")):
+  hits+=1;print_path("Experiment/Graph",[
+  "Rearrange into y=slope*x+b.",
+  "For drop to speed: v^2=(2g)h, slope=2g.",
+  "For rough stopping: h=mu_k*d, slope=mu_k.",
+  "Use repeated trials and average."])
+ if has_any(s,("roll","rolling","disk","sphere","hoop","torque","static")):
+  hits+=1;print_path("Rolling",[
+  "No slip: v=R*omega and a=R*alpha.",
+  "Energy: mgh=.5mv^2+.5Iomega^2.",
+  "Or use sumF=ma and sumtau=Ialpha.",
+  "Larger I/(mR^2) means less translational speed."])
+ if has_any(s,("period","pendulum","oscillation","shm","frequency")):
+  hits+=1;print_path("Oscillation",[
+  "Spring: T=2pi*sqrt(m/k).",
+  "Pendulum: T=2pi*sqrt(L/g).",
+  "Use proportional reasoning for MCQ changes.",
+  "Mass affects spring period, not simple pendulum period."])
+ if hits==0:
+  print("Try keywords like energy, momentum, graph, rolling, period.")
+
+def smart():
+ while True:
+  c=menu("Smart solver",[
+   ("variable/numeric",1),("derivation",2),
+   ("backward proof",3),
+   ("Back",0)])
+  if c==0:return
+  if c==1:smart_num()
+  elif c==2:smart_deriv()
+  elif c==3:smart_back()
+
 def deriv_mom():
  while True:
   c=menu("Momentum deriv",[
@@ -923,19 +1131,17 @@ def deriv():
   elif c==4:deriv_roll()
   elif c==5:deriv_mcq()
 
-def main():
+def fullmenus():
  while True:
   print("")
-  print("AP PHYS C MECH v2")
-  print("SI units, radians")
-  c=menu("Choose area",[
+  c=menu("Full equation menus",[
    ("Kinematics",1),("Forces",2),
    ("Energy/Work/Power",3),("Momentum",4),
    ("Rotation",5),("Oscillations",6),
    ("Gravitation",7),("Calculus tools",8),
    ("Derivation helpers",9),
-   ("Quit",0)])
-  if c==0:print("Done.");return
+   ("Back",0)])
+  if c==0:return
   if c==1:kin()
   elif c==2:force()
   elif c==3:energy()
@@ -945,5 +1151,17 @@ def main():
   elif c==7:grav()
   elif c==8:calc()
   elif c==9:deriv()
+
+def main():
+ while True:
+  print("")
+  print("AP PHYS C MECH v3")
+  print("SI units, radians")
+  c=menu("Choose mode",[
+   ("Smart solver",1),("Full equation menus",2),
+   ("Quit",0)])
+  if c==0:print("Done.");return
+  if c==1:smart()
+  elif c==2:fullmenus()
 
 main()
