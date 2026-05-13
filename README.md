@@ -34,8 +34,9 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 ## Usage rules
 
 - **SI units only.**
-- **Angles in radians.**
-- **Function entries use `u`.** Examples: `3*u**2+4`, `sin(2*u)`, `exp(-u)`. Allowed names: `u, sin, cos, tan, asin, acos, atan, sqrt, exp, pi, g`.
+- **Angles in radians.** Numeric prompts accept expressions such as `pi`, `pi/6`, and `2*pi`.
+- **Function entries use `u`.** Examples: `3u+5`, `3*u**2+4`, `sin(2u)`, `exp(-u)`. Allowed names: `u, sin, cos, tan, asin, acos, atan, sqrt, exp, pi, g`.
+- **Implicit multiplication is accepted.** `3u`, `2pi`, `2sin(u)`, and `(u+1)(u-1)` are converted automatically.
 - **Sign prompts.** When the program asks `sgn 1=+,-1=-:` for ± square-root branches, type `-1` for the negative root, anything else (including blank) for `+`.
 
 ## Main menu

@@ -2,10 +2,47 @@ from math import pi,sin,cos,tan,asin,acos,atan,sqrt,exp
 
 g=9.8
 GC=6.674e-11
+NAMES={"__builtins__":{},"sin":sin,"cos":cos,"tan":tan,"asin":asin,"acos":acos,
+"atan":atan,"sqrt":sqrt,"exp":exp,"pi":pi,"g":g}
+FUNS=("sin","cos","tan","asin","acos","atan","sqrt","exp")
+
+def tok(e):
+ e=e.replace(" ","")
+ ts=[];i=0
+ while i<len(e):
+  c=e[i]
+  if c.isdigit() or c==".":
+   j=i+1
+   while j<len(e) and (e[j].isdigit() or e[j]=="."):j+=1
+   if j<len(e) and (e[j]=="e" or e[j]=="E"):
+    j+=1
+    if j<len(e) and (e[j]=="+" or e[j]=="-"):j+=1
+    while j<len(e) and e[j].isdigit():j+=1
+   ts.append(e[i:j]);i=j
+  elif c.isalpha():
+   j=i+1
+   while j<len(e) and e[j].isalpha():j+=1
+   ts.append(e[i:j]);i=j
+  else:
+   ts.append(c);i+=1
+ return ts
+
+def endfac(t):return t==")" or t[0].isdigit() or t[0]=="." or t[0].isalpha()
+def startfac(t):return t=="(" or t[0].isdigit() or t[0]=="." or t[0].isalpha()
+
+def fixexpr(e):
+ ts=tok(e);out=[]
+ for i,t in enumerate(ts):
+  if i:
+   p=ts[i-1]
+   if endfac(p) and startfac(t) and not (p in FUNS and t=="("):
+    out.append("*")
+  out.append(t)
+ return "".join(out)
 
 def gn(p):
  while True:
-  try:return float(input(p+": "))
+  try:return float(eval(fixexpr(input(p+": ")),NAMES))
   except:print("?")
 
 def gi(p):
@@ -13,13 +50,12 @@ def gi(p):
   try:return int(input(p+": "))
   except:print("?")
 
-def ge(p):return input(p+" (use u): ")
+def ge(p):return fixexpr(input(p+" (use u): "))
 
 def mkf(e):
  def f(u):
-  return eval(e,{"u":u,"sin":sin,"cos":cos,"tan":tan,
-  "asin":asin,"acos":acos,"atan":atan,"sqrt":sqrt,
-  "exp":exp,"pi":pi,"g":g})
+  ns=NAMES.copy();ns["u"]=u
+  return eval(e,ns)
  return f
 
 def menu(t,opts):
