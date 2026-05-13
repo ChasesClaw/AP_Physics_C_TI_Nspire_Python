@@ -49,7 +49,7 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 6. Oscillations — spring, pendulum, physical pendulum, ω, x(t), v(t), a(t), vmax/amax, energy
 7. Gravitation — F, g, U, v_orbit, T_orbit, v_esc, total bound-orbit energy
 8. Calculus tools — ∫F(t)dt, ∫F(x)dx, ∫F(t)v(t)dt, ∫a(t)dt, ∫v(t)dt, df/du, **d²f/du²**, U from F, F from U
-9. AP 2025 FRQ helpers — symbolic/graph helpers for the released 2025 Mechanics FRQs
+9. Derivation helpers — reusable symbolic setup, graph, and MCQ reasoning patterns
 10. Quit
 
 ## How chained solving works
@@ -95,5 +95,5 @@ If you have the CAS edition and want exact symbolic answers for the quadratic-ti
 ## Limits
 
 - Vectors stay 1D — project onto axes yourself.
-- Symbolic FRQ helpers are formula/guidance tools, not full written derivations. AP graders still need your handwritten algebra and reasoning.
+- Derivation helpers are formula/setup guidance tools, not full written derivations. AP graders still need your handwritten algebra and reasoning.
 - `eval` inside `mkf()` is sandboxed to math names only.

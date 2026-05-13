@@ -766,135 +766,162 @@ def fit_xy():
  b=(sy-a*sx)/n
  show("slope",a);show("intercept",b)
 
-def frq25_q1():
+def deriv_mom():
  while True:
-  c=menu("2025 Q1 collision",[
-   ("momentum arrows",1),("Fmax formula",2),
-   ("v1 formula",3),("Back",0)])
-  if c==0:return
-  if c==1:
-   print("p1 before = +2*m*v0")
-   print("p2 before = -6*m*v0")
-   print("system before = -4*m*v0")
-   print("after stuck: vf=-4*v0/7")
-   print("system after = -4*m*v0")
-  elif c==2:
-   print("Use J=dp=int F(t)dt")
-   print("dp block2 = 18*m*v0/7")
-   print("int_0^tc Fmax*sin(A*t)dt")
-   print("=Fmax*(1-cos(A*tc))/A")
-   print("Fmax=18*m*v0*A/(7*(1-cos(A*tc)))")
-  elif c==3:
-   print("Conserve momentum:")
-   print("m*v1-6*m*v0=7*m*vf")
-   print("final speed v0 must be +x")
-   print("v1=13*v0")
-
-def frq25_q2():
- while True:
-  c=menu("2025 Q2 springs",[
-   ("energy bars",1),("v at x1/2",2),
-   ("K graph friction",3),("larger mass graph",4),
+  c=menu("Momentum deriv",[
+   ("collision setup",1),("stick together vf",2),
+   ("impulse from F(t)",3),("sin pulse Fmax",4),
    ("Back",0)])
   if c==0:return
   if c==1:
-   print("At x=x1:")
-   print("UA=.5*k*x1^2")
-   print("UB=.5*(2k)*x1^2=k*x1^2")
-   print("Kblock=0")
-   print("bar ratio UA:UB:K = 1:2:0")
+   print("Choose + direction first.")
+   print("p_before=sum(m_i*v_i)")
+   print("p_after=sum(m_i*v_fi)")
+   print("If external impulse=0:")
+   print("p_before=p_after")
+   print("Keep signs on velocities.")
   elif c==2:
-   print("Energy conserved.")
-   print("Utotal=.5*k*x^2 + .5*(2k)*x^2")
-   print("Utotal=(3/2)*k*x^2")
-   print("K at x1/2 = (9/8)*k*x1^2")
-   print("v=(3*abs(x1)/2)*sqrt(k/m)")
+   print("For a perfectly inelastic collision:")
+   print("m1*v1i + m2*v2i = (m1+m2)*vf")
+   print("vf=(m1*v1i+m2*v2i)/(m1+m2)")
   elif c==3:
-   print("K starts at 0, rises to max near x=0,")
-   print("then returns to 0 at turning points.")
-   print("With friction, each peak is smaller.")
-   print("Same period T; graph dies to K=0.")
+   print("Impulse is area under F-t graph.")
+   print("J=int F(t)dt = dp")
+   print("For one object: J=m*(vf-vi)")
+   print("For a system, internal forces cancel.")
   elif c==4:
-   print("Larger mass: spring period increases.")
-   print("K peaks occur farther apart in time.")
-   print("Friction force mu*m*g is larger,")
-   print("so energy can be lost faster.")
+   print("If F(t)=Fmax*sin(A*t), 0 to T:")
+   print("J=Fmax*(1-cos(A*T))/A")
+   print("Fmax=A*J/(1-cos(A*T))")
+   print("Use J=needed change in momentum.")
 
-def frq25_q3_mu():
- print("Use x_max vs h.")
- print("m*g*h = mu*m*g*x_max")
- print("x_max = h/mu, so slope=1/mu")
- if yes("Use AP table?"):
-  hs=[.30,.45,.60,.75,.90]
-  xs=[.76,1.10,1.40,1.90,2.30]
- else:
-  n=gi("n data pts");hs=[];xs=[]
-  for i in range(n):
-   hs.append(gn("h"+str(i+1)))
-   xs.append(gn("xmax"+str(i+1)))
- shx=sh2=0
- for i in range(len(hs)):
-  shx+=hs[i]*xs[i];sh2+=hs[i]*hs[i]
- if sh2==0:print("bad data");return
- slope=shx/sh2
- show("slope x/h",slope)
- show("mu",1/slope)
- print("Equiv: graph h vs x, slope=mu.")
-
-def frq25_q3():
+def deriv_energy():
  while True:
-  c=menu("2025 Q3 experiment",[
-   ("g linear graph",1),("rough graph vars",2),
-   ("mu from data",3),("generic line fit",4),
+  c=menu("Energy deriv",[
+   ("conservation setup",1),("many springs",2),
+   ("solve speed symbolically",3),("friction graphs",4),
    ("Back",0)])
   if c==0:return
   if c==1:
-   print("Vary release height h.")
-   print("Measure launch speed v with sensor.")
-   print("Repeat/average each h.")
-   print("Energy: m*g*h=.5*m*v^2")
-   print("Graph y=v^2 vs x=h.")
-   print("slope=2*g, so g=slope/2")
+   print("Write all energy terms:")
+   print("Ki+Ug_i+Us_i+W_nc = Kf+Ug_f+Us_f")
+   print("Ug=m*g*y")
+   print("Us=.5*k*x^2")
+   print("W_nc is + added, - removed.")
   elif c==2:
-   print("Rough surface:")
-   print("m*g*h = mu*m*g*x_max")
-   print("Graph y=x_max vs x=h.")
-   print("slope=1/mu, so mu=1/slope")
-   print("Or graph y=h vs x=x_max; slope=mu.")
-  elif c==3:frq25_q3_mu()
+   print("Add spring energies.")
+   print("Us_total=sum(.5*k_i*x_i^2)")
+   print("If same displacement x:")
+   print("Us_total=.5*(sum k_i)*x^2")
+   print("This acts like k_eff=sum k_i.")
+  elif c==3:
+   print("After moving terms:")
+   print("Kf=Ki+Ui+W_nc-Uf")
+   print(".5*m*v^2=Kf")
+   print("v=+/-sqrt(2*Kf/m)")
+   print("Sign comes from direction.")
+  elif c==4:
+   print("Friction removes mechanical energy:")
+   print("W_f=-mu_k*N*d")
+   print("K graph peaks shrink over time.")
+   print("Turning points have K=0.")
+   print("Bigger m -> bigger fk if N=m*g.")
+
+def deriv_exp():
+ while True:
+  c=menu("Experiment deriv",[
+   ("linearize steps",1),("find g graph",2),
+   ("find mu graph",3),("line fit",4),
+   ("Back",0)])
+  if c==0:return
+  if c==1:
+   print("1 choose independent variable x")
+   print("2 choose measured dependent y")
+   print("3 rearrange to y=slope*x+b")
+   print("4 constant wanted is in slope")
+   print("5 repeat trials and average")
+  elif c==2:
+   print("Energy drop to kinetic:")
+   print("m*g*h=.5*m*v^2")
+   print("v^2 = (2g)*h")
+   print("Graph y=v^2 vs x=h.")
+   print("slope=2g, so g=slope/2.")
+  elif c==3:
+   print("Energy lost to rough surface:")
+   print("m*g*h = mu_k*m*g*d")
+   print("h = mu_k*d")
+   print("Graph y=h vs x=d.")
+   print("slope=mu_k.")
   elif c==4:fit_xy()
 
-def frq25_q4():
+def deriv_roll():
  while True:
-  c=menu("2025 Q4 rolling",[
-   ("static f compare",1),("static f formula",2),
-   ("kinetic f compare",3),("Back",0)])
-  if c==0:return
-  if c==1:
-   print("fD < fR")
-   print("Ring has larger I, so it needs")
-   print("more torque to reduce rotation.")
-  elif c==2:
-   print("Use sumF=M*a, sumtau=I*alpha, a=R*alpha")
-   print("For rolling up ramp, static f is up ramp.")
-   print("f = M*g*sin(theta)*I/(I+M*R^2)")
-  elif c==3:
-   print("fD = fR")
-   print("While slipping, fk=mu_k*N.")
-   print("Same material, M, and theta -> same N")
-   print("so same kinetic friction.")
-
-def frq25():
- while True:
-  c=menu("AP 2025 FRQ helpers",[
-   ("Q1 collision",1),("Q2 springs",2),
-   ("Q3 experiment",3),("Q4 rolling",4),
+  c=menu("Rolling deriv",[
+   ("rolling energy",1),("incline equations",2),
+   ("compare shapes",3),("static vs kinetic f",4),
    ("Back",0)])
   if c==0:return
-  if c==1:frq25_q1()
-  elif c==2:frq25_q2()
-  elif c==3:frq25_q3()
-  elif c==4:frq25_q4()
+  if c==1:
+   print("No slip: v=R*w")
+   print("Ktotal=.5*m*v^2+.5*I*w^2")
+   print("Ktotal=.5*(m+I/R^2)*v^2")
+   print("Use with mgh or spring energy.")
+  elif c==2:
+   print("Use signs along incline.")
+   print("sumF_parallel = m*a")
+   print("sumtau_cm = I*alpha")
+   print("no slip: a=R*alpha")
+   print("Solve these three together.")
+  elif c==3:
+   print("Larger I/(mR^2):")
+   print("- smaller translational speed")
+   print("- smaller acceleration down ramp")
+   print("- more energy in rotation")
+   print("Ring > disk > solid sphere in I factor.")
+  elif c==4:
+   print("Static friction adjusts; f_s <= mu_s*N.")
+   print("It can be up or down ramp.")
+   print("Kinetic slipping: f_k=mu_k*N.")
+   print("For same m, theta, surface: same f_k.")
+
+def deriv_mcq():
+ while True:
+  c=menu("MCQ deriv checks",[
+   ("units",1),("limits",2),("signs",3),
+   ("proportions",4),("Back",0)])
+  if c==0:return
+  if c==1:
+   print("Check dimensions before calculating.")
+   print("Energy: kg*m^2/s^2")
+   print("Momentum: kg*m/s")
+   print("Torque: N*m")
+  elif c==2:
+   print("Try simple limits:")
+   print("m->0, k->0, mu->0, I->0")
+   print("Bad formulas often fail limits.")
+  elif c==3:
+   print("Choose positive direction.")
+   print("Velocity, momentum, force can be signed.")
+   print("Speed, mass, energy magnitudes are nonnegative.")
+  elif c==4:
+   print("Use proportional reasoning:")
+   print("K~v^2, Us~x^2, Ug~h")
+   print("T_spring~sqrt(m/k)")
+   print("T_pend~sqrt(L/g)")
+
+def deriv():
+ while True:
+  c=menu("Derivation helpers",[
+   ("momentum/impulse",1),("energy/springs",2),
+   ("experiments/graphs",3),("rolling/friction",4),
+   ("MCQ checks",5),
+   ("Back",0)])
+  if c==0:return
+  if c==1:deriv_mom()
+  elif c==2:deriv_energy()
+  elif c==3:deriv_exp()
+  elif c==4:deriv_roll()
+  elif c==5:deriv_mcq()
 
 def main():
  while True:
@@ -906,7 +933,7 @@ def main():
    ("Energy/Work/Power",3),("Momentum",4),
    ("Rotation",5),("Oscillations",6),
    ("Gravitation",7),("Calculus tools",8),
-   ("AP 2025 FRQ helpers",9),
+   ("Derivation helpers",9),
    ("Quit",0)])
   if c==0:print("Done.");return
   if c==1:kin()
@@ -917,6 +944,6 @@ def main():
   elif c==6:osc()
   elif c==7:grav()
   elif c==8:calc()
-  elif c==9:frq25()
+  elif c==9:deriv()
 
 main()
