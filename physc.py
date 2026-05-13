@@ -767,15 +767,16 @@ def fit_xy():
  show("slope",a);show("intercept",b)
 
 ALIASES={"mass":"m","velocity":"v","speed":"v","time":"t","dist":"d",
-"distance":"d","height":"h","force":"F","work":"W","theta":"theta",
+"distance":"d","height":"h","f":"F","force":"F","netforce":"Fnet",
+"normal":"N","friction":"ffric","fric":"ffric","work":"W","theta":"theta",
 "angle":"theta","fnet":"Fnet","wnc":"Wnc","winc":"Wnc","ki":"Ki",
 "ui":"Ui","uf":"Uf","kf":"Kf","ug":"Ug","us":"Us","tspring":"Tspring",
-"tpend":"Tpend","omega":"omega","radius":"r","length":"L",
+"tpend":"Tpend","period":"T","omega":"omega","radius":"r","length":"L",
 "muk":"mu","mukinetic":"mu","coefficient":"mu"}
 
 def nk(k):
- r=k.replace("_","").strip()
- if r in ("M","I","L","K","J","W","P"):return r
+ r=k.replace("_","").replace(" ","").strip()
+ if r in ("M","I","L","K","J","W","P","T"):return r
  lo=r.lower()
  return ALIASES.get(lo,r)
 
@@ -812,18 +813,25 @@ def smart_eqs():
  return [
  ("a",("Fnet","m"),lambda k:val(k,"Fnet")/val(k,"m"),"a=Fnet/m"),
  ("Fnet",("m","a"),lambda k:val(k,"m")*val(k,"a"),"Fnet=m*a"),
+ ("Fnet",("m","v","r"),lambda k:val(k,"m")*val(k,"v")**2/val(k,"r"),"centripetal net force"),
  ("v",("v0","a","t"),lambda k:val(k,"v0")+val(k,"a")*val(k,"t"),"v=v0+a*t"),
  ("x",("x0","v0","a","t"),lambda k:val(k,"x0")+val(k,"v0")*val(k,"t")+.5*val(k,"a")*val(k,"t")**2,"x=x0+v0*t+.5*a*t^2"),
+ ("a",("x","x0","v0","t"),lambda k:2*(val(k,"x")-val(k,"x0")-val(k,"v0")*val(k,"t"))/val(k,"t")**2,"a=2*(x-x0-v0*t)/t^2"),
+ ("v",("x","x0","v0","t"),lambda k:2*(val(k,"x")-val(k,"x0"))/val(k,"t")-val(k,"v0"),"v=2*(x-x0)/t-v0"),
  ("a",("v","v0","t"),lambda k:(val(k,"v")-val(k,"v0"))/val(k,"t"),"a=(v-v0)/t"),
  ("K",("m","v"),lambda k:.5*val(k,"m")*val(k,"v")**2,"K=.5*m*v^2"),
  ("v",("K","m"),lambda k:sqrt(2*val(k,"K")/val(k,"m")),"speed=sqrt(2K/m)"),
  ("p",("m","v"),lambda k:val(k,"m")*val(k,"v"),"p=m*v"),
  ("J",("Favg","dt"),lambda k:val(k,"Favg")*val(k,"dt"),"J=Favg*dt"),
+ ("Favg",("J","dt"),lambda k:val(k,"J")/val(k,"dt"),"Favg=J/dt"),
  ("vf",("v0","J","m"),lambda k:val(k,"v0")+val(k,"J")/val(k,"m"),"vf=v0+J/m"),
  ("W",("F","d","theta"),lambda k:val(k,"F")*val(k,"d")*cos(val(k,"theta")),"W=F*d*cos(theta)"),
+ ("F",("W","d","theta"),lambda k:val(k,"W")/(val(k,"d")*cos(val(k,"theta"))),"F=W/(d*cos(theta))"),
  ("P",("W","t"),lambda k:val(k,"W")/val(k,"t"),"P=W/t"),
  ("Ug",("m","y"),lambda k:val(k,"m")*g*val(k,"y"),"Ug=m*g*y"),
  ("Us",("k","x"),lambda k:.5*val(k,"k")*val(k,"x")**2,"Us=.5*k*x^2"),
+ ("F",("k","x"),lambda k:-val(k,"k")*val(k,"x"),"spring force F=-kx"),
+ ("ffric",("mu","N"),lambda k:val(k,"mu")*val(k,"N"),"friction force f=mu*N"),
  ("x",("Us","k"),lambda k:sqrt(2*val(k,"Us")/val(k,"k")),"spring x=sqrt(2Us/k)"),
  ("v",("m","k","x"),lambda k:val(k,"x")*sqrt(val(k,"k")/val(k,"m")),"spring speed from .5kx^2=.5mv^2"),
  ("d",("h","mu"),lambda k:val(k,"h")/val(k,"mu"),"stopping distance from mgh=mu*mg*d"),
@@ -844,16 +852,24 @@ def sym_eqs():
  return [
  ("a",("Fnet","m"),"Fnet/m","Newton 2nd law"),
  ("Fnet",("m","a"),"m*a","Newton 2nd law"),
+ ("Fnet",("m","v","r"),"m*v^2/r","centripetal net force"),
  ("v",("v0","a","t"),"v0+a*t","constant acceleration"),
  ("x",("x0","v0","a","t"),"x0+v0*t+.5*a*t^2","constant acceleration"),
+ ("a",("x","x0","v0","t"),"2*(x-x0-v0*t)/t^2","constant acceleration solved for acceleration"),
+ ("v",("x","x0","v0","t"),"2*(x-x0)/t-v0","constant acceleration average velocity"),
+ ("a",("v","v0","t"),"(v-v0)/t","constant acceleration solved for acceleration"),
  ("K",("m","v"),".5*m*v^2","kinetic energy"),
  ("v",("K","m"),"sqrt(2*K/m)","solve kinetic energy for speed"),
  ("p",("m","v"),"m*v","momentum"),
  ("J",("Favg","dt"),"Favg*dt","constant average force impulse"),
+ ("Favg",("J","dt"),"J/dt","average force from impulse"),
  ("vf",("v0","J","m"),"v0+J/m","impulse-momentum"),
  ("W",("F","d","theta"),"F*d*cos(theta)","work by constant force"),
+ ("F",("W","d","theta"),"W/(d*cos(theta))","force from work"),
  ("Ug",("m","y"),"m*g*y","gravitational potential"),
  ("Us",("k","x"),".5*k*x^2","spring potential"),
+ ("F",("k","x"),"-k*x","spring force"),
+ ("ffric",("mu","N"),"mu*N","friction force"),
  ("x",("Us","k"),"sqrt(2*Us/k)","solve spring energy for x"),
  ("v",("m","k","x"),"x*sqrt(k/m)","spring energy converted to kinetic energy"),
  ("d",("h","mu"),"h/mu","height energy lost to friction"),
@@ -870,8 +886,9 @@ def sym_eqs():
 VN={"m":"mass","M":"big mass","v":"speed/velocity","v0":"initial velocity",
 "vf":"final velocity","a":"acceleration","t":"time","x":"position/stretch",
 "x0":"initial position","d":"distance","h":"height","mu":"friction coeff",
-"F":"force","Fnet":"net force","Favg":"average force","dt":"time interval",
-"theta":"angle rad","K":"kinetic energy","Ki":"initial K","Kf":"final K",
+"F":"force","Fnet":"net force","Favg":"average force","ffric":"friction force",
+"N":"normal force","dt":"time interval",
+"theta":"angle rad","W":"work","K":"kinetic energy","Ki":"initial K","Kf":"final K",
 "Ui":"initial U","Uf":"final U","Wnc":"nonconservative work","Ug":"grav U",
 "Us":"spring U","k":"spring constant","p":"momentum","J":"impulse",
 "I":"rot inertia","omega":"angular speed","r":"radius","L":"length"}
@@ -922,7 +939,8 @@ def smart_quick():
  print("Use Wnc for nonconservative work.")
  ks={}
  while True:
-  s=input("knowns blank=solve: ").strip()
+  try:s=input("knowns blank=solve: ").strip()
+  except EOFError:break
   if s=="":break
   add_knowns(ks,s)
  solve_knowns(ks)
@@ -971,11 +989,23 @@ def compute_eq(out,rs,ks):
    except:return None
  return None
 
+def target_match(target,out):
+ target=nk(target);out=nk(out)
+ if target==out:return True
+ if target=="F" and out in ("Fnet","Favg","ffric"):return True
+ if target=="T" and out in ("Tspring","Tpend"):return True
+ return False
+
+def need_text(rs):
+ s=[]
+ for r in rs:s.append(nk(r))
+ return ",".join(s)
+
 def choose_target_eq(v):
  opts=[]
  for e in sym_eqs():
-  if nk(e[0])==nk(v):
-   opts.append((e[3]+": "+e[0]+"="+e[2],e))
+  if target_match(v,e[0]):
+   opts.append((e[3]+": "+e[0]+"="+e[2]+"  need "+need_text(e[1]),e))
  if not opts:return None
  opts.append(("Back",0))
  return menu("Path for "+v,opts)
@@ -1006,14 +1036,17 @@ def solve_target_var(v,ks,depth):
  print("")
  print("Use "+why)
  print(out+" = "+form)
+ oo=nk(out)
  if num!=None:
-  ks[nk(out)]=num;print(out+" = "+str(num))
+  ks[oo]=num;print(out+" = "+str(num))
  else:
-  ks[nk(out)]=form;print(out+" = "+form)
+  ks[oo]=form;print(out+" = "+form)
+ if oo!=v:ks[v]=ks[oo]
  return True
 
 def smart_target():
  ks={}
+ print("Examples: v, a, x, F/force, W, K, p, T/period")
  target=nk(input("What variable do you want? ").strip())
  if target=="":return
  print("If a needed value is unknown, press Enter.")
