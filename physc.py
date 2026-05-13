@@ -766,7 +766,18 @@ def fit_xy():
  b=(sy-a*sx)/n
  show("slope",a);show("intercept",b)
 
-def nk(k):return k.replace("_","")
+ALIASES={"mass":"m","velocity":"v","speed":"v","time":"t","dist":"d",
+"distance":"d","height":"h","force":"F","work":"W","theta":"theta",
+"angle":"theta","fnet":"Fnet","wnc":"Wnc","winc":"Wnc","ki":"Ki",
+"ui":"Ui","uf":"Uf","kf":"Kf","ug":"Ug","us":"Us","tspring":"Tspring",
+"tpend":"Tpend","omega":"omega","radius":"r","length":"L",
+"muk":"mu","mukinetic":"mu","coefficient":"mu"}
+
+def nk(k):
+ r=k.replace("_","").strip()
+ if r in ("M","I","L","K","J","W","P"):return r
+ lo=r.lower()
+ return ALIASES.get(lo,r)
 
 def add_knowns(ks,s):
  s=s.replace(";",",")
@@ -774,8 +785,13 @@ def add_knowns(ks,s):
   p=p.strip()
   if "=" in p:
    a,b=p.split("=",1)
-   try:ks[nk(a.strip())]=float(eval(fixexpr(b.strip()),NAMES))
-   except:print("? "+p)
+   set_known(ks,a.strip(),b.strip())
+
+def set_known(ks,k,v):
+ if v=="":return
+ if v.lower() in ("null","none","blank","?"):return
+ try:ks[nk(k)]=float(eval(fixexpr(v),NAMES))
+ except:ks[nk(k)]=fixexpr(v)
 
 def req(ks,rs):
  for r in rs:
@@ -789,6 +805,8 @@ def put(ks,out,v,ans,why):
  out=nk(out)
  if out not in ks:
   ks[out]=v;ans.append((out,v,why))
+
+def isnum(x):return type(x)==float or type(x)==int
 
 def smart_eqs():
  return [
@@ -807,6 +825,8 @@ def smart_eqs():
  ("Ug",("m","y"),lambda k:val(k,"m")*g*val(k,"y"),"Ug=m*g*y"),
  ("Us",("k","x"),lambda k:.5*val(k,"k")*val(k,"x")**2,"Us=.5*k*x^2"),
  ("x",("Us","k"),lambda k:sqrt(2*val(k,"Us")/val(k,"k")),"spring x=sqrt(2Us/k)"),
+ ("v",("m","k","x"),lambda k:val(k,"x")*sqrt(val(k,"k")/val(k,"m")),"spring speed from .5kx^2=.5mv^2"),
+ ("d",("h","mu"),lambda k:val(k,"h")/val(k,"mu"),"stopping distance from mgh=mu*mg*d"),
  ("Kf",("Ki","Ui","Wnc","Uf"),lambda k:val(k,"Ki")+val(k,"Ui")+val(k,"Wnc")-val(k,"Uf"),"Kf=Ki+Ui+Wnc-Uf"),
  ("v",("Kf","m"),lambda k:sqrt(2*val(k,"Kf")/val(k,"m")),"speed from final K"),
  ("Tspring",("m","k"),lambda k:2*pi*sqrt(val(k,"m")/val(k,"k")),"T=2pi*sqrt(m/k)"),
@@ -820,14 +840,62 @@ def smart_eqs():
  ("vesc",("M","r"),lambda k:sqrt(2*GC*val(k,"M")/val(k,"r")),"v_esc=sqrt(2GM/r)"),
  ("vroll",("m","h","r","I"),lambda k:sqrt(2*g*val(k,"h")/(1+val(k,"I")/(val(k,"m")*val(k,"r")**2))),"rolling speed from height")]
 
-def smart_num():
- print("Enter knowns like m=5,v0=0,a=2")
- print("Use Wnc for nonconservative work.")
- ks={}
- while True:
-  s=input("knowns blank=solve: ").strip()
-  if s=="":break
-  add_knowns(ks,s)
+def sym_eqs():
+ return [
+ ("a",("Fnet","m"),"Fnet/m","Newton 2nd law"),
+ ("Fnet",("m","a"),"m*a","Newton 2nd law"),
+ ("v",("v0","a","t"),"v0+a*t","constant acceleration"),
+ ("x",("x0","v0","a","t"),"x0+v0*t+.5*a*t^2","constant acceleration"),
+ ("K",("m","v"),".5*m*v^2","kinetic energy"),
+ ("v",("K","m"),"sqrt(2*K/m)","solve kinetic energy for speed"),
+ ("p",("m","v"),"m*v","momentum"),
+ ("J",("Favg","dt"),"Favg*dt","constant average force impulse"),
+ ("vf",("v0","J","m"),"v0+J/m","impulse-momentum"),
+ ("W",("F","d","theta"),"F*d*cos(theta)","work by constant force"),
+ ("Ug",("m","y"),"m*g*y","gravitational potential"),
+ ("Us",("k","x"),".5*k*x^2","spring potential"),
+ ("x",("Us","k"),"sqrt(2*Us/k)","solve spring energy for x"),
+ ("v",("m","k","x"),"x*sqrt(k/m)","spring energy converted to kinetic energy"),
+ ("d",("h","mu"),"h/mu","height energy lost to friction"),
+ ("Kf",("Ki","Ui","Wnc","Uf"),"Ki+Ui+Wnc-Uf","energy conservation"),
+ ("v",("Kf","m"),"sqrt(2*Kf/m)","speed from final kinetic energy"),
+ ("Tspring",("m","k"),"2*pi*sqrt(m/k)","spring period"),
+ ("Tpend",("L",),"2*pi*sqrt(L/g)","pendulum period"),
+ ("omega",("k","m"),"sqrt(k/m)","spring angular frequency"),
+ ("ac",("v","r"),"v^2/r","centripetal acceleration"),
+ ("Krot",("I","omega"),".5*I*omega^2","rotational kinetic energy"),
+ ("Lrot",("I","omega"),"I*omega","angular momentum"),
+ ("vroll",("m","h","r","I"),"sqrt(2*g*h/(1+I/(m*r^2)))","rolling energy")]
+
+VN={"m":"mass","M":"big mass","v":"speed/velocity","v0":"initial velocity",
+"vf":"final velocity","a":"acceleration","t":"time","x":"position/stretch",
+"x0":"initial position","d":"distance","h":"height","mu":"friction coeff",
+"F":"force","Fnet":"net force","Favg":"average force","dt":"time interval",
+"theta":"angle rad","K":"kinetic energy","Ki":"initial K","Kf":"final K",
+"Ui":"initial U","Uf":"final U","Wnc":"nonconservative work","Ug":"grav U",
+"Us":"spring U","k":"spring constant","p":"momentum","J":"impulse",
+"I":"rot inertia","omega":"angular speed","r":"radius","L":"length"}
+
+VG=[("motion",("m","v0","v","a","t","x0","x","Fnet")),
+("energy",("m","v","K","Ki","Ui","Wnc","Uf","h","mu","d","k","x","Us")),
+("momentum",("m","v","v0","vf","p","J","Favg","dt")),
+("rotation",("I","omega","r","m","h")),
+("osc/grav",("m","k","L","M","r"))]
+
+def sym_solve(ks):
+ out=[]
+ have={}
+ for k in ks:have[k]=1
+ for _ in range(5):
+  n=len(out)
+  for v,rs,f,why in sym_eqs():
+   vv=nk(v)
+   if vv not in have and req(have,rs):
+    have[vv]=1;out.append((vv,f,why))
+  if len(out)==n:break
+ return out
+
+def solve_knowns(ks):
  ans=[]
  for _ in range(6):
   n=len(ans)
@@ -837,12 +905,124 @@ def smart_num():
     except:pass
   if len(ans)==n:break
  if ans:
-  print("Can solve:")
+  print("Can calculate:")
   for a,b,w in ans:print(a+" = "+str(b)+"  from "+w)
  else:
-  print("No new values from those knowns.")
+  print("No new numeric values.")
+ sym=sym_solve(ks)
+ if sym:
+  print("Formula paths:")
+  for a,f,w in sym:print(a+" = "+f+"  from "+w)
  print("Known now:")
  for k in sorted(ks):print(k+" = "+str(ks[k]))
+
+def smart_quick():
+ print("Enter knowns like m=5,v0=0,a=2")
+ print("Symbols are ok too: mass=m,k=k,x=x")
+ print("Use Wnc for nonconservative work.")
+ ks={}
+ while True:
+  s=input("knowns blank=solve: ").strip()
+  if s=="":break
+  add_knowns(ks,s)
+ solve_knowns(ks)
+
+def smart_guided():
+ c=menu("Which variables?",[
+  ("motion",0),("energy",1),("momentum",2),
+  ("rotation",3),("osc/grav",4),("all common",5),
+  ("Back",99)])
+ if c==99:return
+ if c==5:
+  vs=[]
+  for _,g in VG:
+   for v in g:
+    if v not in vs:vs.append(v)
+ else:vs=list(VG[c][1])
+ print("Enter a number, a symbol like m, or blank if unknown.")
+ ks={}
+ for v in vs:
+  try:s=input(v+" "+VN.get(v,"")+": ").strip()
+  except EOFError:break
+  if s!="":set_known(ks,v,s)
+ solve_knowns(ks)
+
+def smart_num():
+ while True:
+  c=menu("Knowns solver",[
+   ("guided variable list",1),("quick knowns line",2),
+   ("Back",0)])
+  if c==0:return
+  if c==1:smart_guided()
+  elif c==2:smart_quick()
+
+def same_rs(a,b):
+ if len(a)!=len(b):return False
+ for i in range(len(a)):
+  if nk(a[i])!=nk(b[i]):return False
+ return True
+
+def compute_eq(out,rs,ks):
+ for o,r,fn,_ in smart_eqs():
+  if nk(o)==nk(out) and same_rs(r,rs):
+   for x in r:
+    if not isnum(val(ks,x)):return None
+   try:return fn(ks)
+   except:return None
+ return None
+
+def choose_target_eq(v):
+ opts=[]
+ for e in sym_eqs():
+  if nk(e[0])==nk(v):
+   opts.append((e[3]+": "+e[0]+"="+e[2],e))
+ if not opts:return None
+ opts.append(("Back",0))
+ return menu("Path for "+v,opts)
+
+def ask_given(ks,v):
+ s=input(v+" "+VN.get(v,"")+" blank=solve: ").strip()
+ if s!="":
+  if "=" in s:add_knowns(ks,s)
+  else:set_known(ks,v,s)
+  return True
+ return False
+
+def solve_target_var(v,ks,depth):
+ v=nk(v)
+ if v in ks:return True
+ if depth>4:print("too deep");return False
+ e=choose_target_eq(v)
+ if e==0 or e==None:
+  print("No path for "+v);return False
+ out,rs,form,why=e
+ for r in rs:
+  rr=nk(r)
+  if rr not in ks:
+   if not ask_given(ks,rr):
+    print("Trying to find "+rr+" first...")
+    if not solve_target_var(rr,ks,depth+1):return False
+ num=compute_eq(out,rs,ks)
+ print("")
+ print("Use "+why)
+ print(out+" = "+form)
+ if num!=None:
+  ks[nk(out)]=num;print(out+" = "+str(num))
+ else:
+  ks[nk(out)]=form;print(out+" = "+form)
+ return True
+
+def smart_target():
+ ks={}
+ target=nk(input("What variable do you want? ").strip())
+ if target=="":return
+ print("If a needed value is unknown, press Enter.")
+ if solve_target_var(target,ks,0):
+  print("")
+  print("Result:")
+  print(target+" = "+str(ks.get(target,"?")))
+  print("Knowns used:")
+  for k in sorted(ks):print(k+" = "+str(ks[k]))
 
 def has_any(s,ws):
  for w in ws:
@@ -865,63 +1045,68 @@ def has_all(s,ws):
  return True
 
 def smart_back():
- ans=clean(input("given answer/expression: "))
- giv=input("givens/keywords optional: ").lower()
+ print("Paste the answer you were given.")
+ print("Then describe the situation in a few words.")
+ ans=clean(input("answer formula: "))
+ giv=input("problem type optional: ").lower()
  s=ans+" "+giv
  hits=0
  if "h/mu" in ans or "h/muk" in ans:
-  hits+=1;print_path("Back path: stopping distance",[
-  "Target looks like distance from height/friction.",
-  "Use energy: initial Ug = work lost to friction.",
-  "m*g*h = mu_k*m*g*d",
-  "Cancel m and g: h = mu_k*d",
-  "Solve for d: d = h/mu_k"])
+  hits+=1;print_path("How to show: d = h/mu",[
+  "This is a height-to-friction stopping problem.",
+  "Start with energy: gravitational energy becomes work done by friction.",
+  "Write: m*g*h = mu_k*m*g*d",
+  "Cancel m and g on both sides.",
+  "You get h = mu_k*d, so d = h/mu_k."])
  if has_all(ans,("x","r(k/m)")) or has_all(ans,("x","r(k","m)")):
-  hits+=1;print_path("Back path: spring speed",[
-  "Target looks like v from spring energy.",
-  "Use conservation: Us_i = K_f",
-  ".5*k*x^2 = .5*m*v^2",
-  "Cancel .5 and solve:",
-  "v = x*sqrt(k/m)"])
+  hits+=1;print_path("How to show: v = x*sqrt(k/m)",[
+  "This is spring potential energy becoming kinetic energy.",
+  "Start with conservation of energy: spring energy = kinetic energy.",
+  "Write: .5*k*x^2 = .5*m*v^2",
+  "Cancel .5, divide by m, then square root.",
+  "You get v = x*sqrt(k/m)."])
  if has_all(ans,("r(2","k","m")) or has_all(ans,("r(2k","m")):
-  hits+=1;print_path("Back path: speed from energy",[
-  "Target looks like v=sqrt(2K/m).",
-  "Start with K=.5*m*v^2",
-  "2K=m*v^2",
-  "v=sqrt(2K/m)",
-  "Use sign separately for direction."])
+  hits+=1;print_path("How to show: v = sqrt(2K/m)",[
+  "Start with kinetic energy.",
+  "Write: K = .5*m*v^2",
+  "Multiply both sides by 2: 2K = m*v^2",
+  "Divide by m and square root.",
+  "Use a sign only if the problem asks for velocity direction."])
  if "2pi" in ans and "r(m/k)" in ans:
-  hits+=1;print_path("Back path: spring period",[
-  "Target is spring SHM period.",
-  "Use omega=sqrt(k/m).",
-  "T=2*pi/omega",
-  "T=2*pi*sqrt(m/k)"])
+  hits+=1;print_path("How to show: T = 2*pi*sqrt(m/k)",[
+  "This is a mass-spring period result.",
+  "Use omega = sqrt(k/m).",
+  "Period and angular frequency are related by T = 2*pi/omega.",
+  "Substitute omega and simplify.",
+  "You get T = 2*pi*sqrt(m/k)."])
  if "2pi" in ans and "r(l/g)" in ans:
-  hits+=1;print_path("Back path: pendulum period",[
-  "Target is small-angle pendulum period.",
-  "Use omega=sqrt(g/L).",
-  "T=2*pi/omega",
-  "T=2*pi*sqrt(L/g)"])
+  hits+=1;print_path("How to show: T = 2*pi*sqrt(L/g)",[
+  "This is a small-angle pendulum period result.",
+  "Use omega = sqrt(g/L).",
+  "Period and angular frequency are related by T = 2*pi/omega.",
+  "Substitute omega and simplify.",
+  "You get T = 2*pi*sqrt(L/g)."])
  if has_all(ans,("r(2gh","1+i")) or "vroll" in giv:
-  hits+=1;print_path("Back path: rolling speed",[
-  "Target looks like rolling from height.",
-  "Use mgh=.5*m*v^2+.5*I*w^2",
-  "No slip: w=v/R",
-  "mgh=.5*(m+I/R^2)*v^2",
-  "v=sqrt(2gh/(1+I/(mR^2)))"])
+  hits+=1;print_path("How to show: rolling speed from height",[
+  "This is energy with both translation and rotation.",
+  "Start with mgh = .5*m*v^2 + .5*I*w^2",
+  "For rolling without slipping, w = v/R.",
+  "Substitute to get mgh = .5*(m+I/R^2)*v^2",
+  "Solve for v: sqrt(2gh/(1+I/(mR^2)))."])
  if "fmax" in ans or ("j" in ans and "cos" in ans):
-  hits+=1;print_path("Back path: force-time pulse",[
-  "Target looks like impulse from a sine force.",
-  "Use J=int F(t)dt.",
-  "If F=Fmax*sin(A*t):",
-  "J=Fmax*(1-cos(A*T))/A",
-  "Solve: Fmax=A*J/(1-cos(A*T))"])
+  hits+=1;print_path("How to show: force pulse maximum",[
+  "This is an impulse problem.",
+  "Impulse equals area under the force-time graph: J = int F(t)dt.",
+  "If F = Fmax*sin(A*t), integrate from 0 to T.",
+  "J = Fmax*(1-cos(A*T))/A",
+  "Solve for Fmax: A*J/(1-cos(A*T))."])
  if "vf" in ans and ("/" in ans or "m1" in ans):
-  hits+=1;print_path("Back path: inelastic collision",[
-  "Target looks like final velocity after collision.",
-  "Use momentum conservation.",
-  "m1*v1i+m2*v2i=(m1+m2)*vf",
-  "vf=(m1*v1i+m2*v2i)/(m1+m2)"])
+  hits+=1;print_path("How to show: stuck-together collision speed",[
+  "This is conservation of momentum.",
+  "Before collision: total momentum is m1*v1i + m2*v2i.",
+  "After they stick: total mass is (m1+m2) moving at vf.",
+  "Write m1*v1i + m2*v2i = (m1+m2)*vf.",
+  "Divide by (m1+m2)."])
  if hits==0:
   smart_deriv()
 
@@ -966,13 +1151,14 @@ def smart_deriv():
 def smart():
  while True:
   c=menu("Smart solver",[
-   ("variable/numeric",1),("derivation",2),
-   ("backward proof",3),
+   ("all from givens",1),("solve one target",2),
+   ("derivation",3),("backward proof",4),
    ("Back",0)])
   if c==0:return
   if c==1:smart_num()
-  elif c==2:smart_deriv()
-  elif c==3:smart_back()
+  elif c==2:smart_target()
+  elif c==3:smart_deriv()
+  elif c==4:smart_back()
 
 def deriv_mom():
  while True:

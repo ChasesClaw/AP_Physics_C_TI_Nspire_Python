@@ -41,23 +41,31 @@ The TI-BASIC version (`physc_chained_solver.ti.txt`) works fine after the Local-
 
 ## Main menu
 
-1. Smart solver — choose variable/numeric solving, derivation guidance, or backward proof
+1. Smart solver — solve from givens, solve one target, derivation guidance, or backward proof
 2. Full equation menus — opens the older topic menus
 3. Quit
 
 ### Smart solver
 
-Variable/numeric mode accepts known values such as:
+All-from-givens mode can either prompt you through a variable list or accept known values on one line:
 
 ```
 m=5,v0=0,a=2,t=4
 ```
 
-Then it chains through common Mechanics equations and prints every new value it can find. Use `Wnc` for nonconservative work.
+It also accepts symbolic givens such as:
+
+```
+mass=m,k=k,x=x
+```
+
+Then it chains through common Mechanics equations. If the values are numeric, it prints computed answers. If some values are symbols, it prints formula paths it can build from the givens. Use `Wnc` for nonconservative work.
+
+Solve-one-target mode asks what variable you want, lets you pick a path for it, then prompts only for the values that path needs. If a needed value is unknown, press Enter and the program tries to solve that missing value first before returning to the original target.
 
 Derivation mode asks for givens/keywords and a goal, then suggests useful principle paths such as energy, momentum/impulse, graph linearization, rolling constraints, oscillation proportionality, and MCQ checks.
 
-Backward proof mode asks for a given answer/expression, such as `d=h/mu` or `v=x*sqrt(k/m)`, plus optional givens/keywords. It matches common AP Mechanics forms and prints the steps that connect the givens to that answer.
+Backward proof mode asks for a given answer/expression, such as `d=h/mu` or `v=x*sqrt(k/m)`, plus an optional plain-language problem type. It matches common AP Mechanics forms and prints the steps that connect the givens to that answer.
 
 ### Full equation menus
 
