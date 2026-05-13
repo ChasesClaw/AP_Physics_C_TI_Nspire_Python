@@ -67,6 +67,7 @@ def menu(t,opts):
   try:
    c=int(input("> "))
    if 1<=c<=len(opts):return opts[c-1][1]
+  except EOFError:return opts[-1][1]
   except:pass
 
 def yes(p):return input(p+" 1=y: ").strip()=="1"
@@ -753,6 +754,148 @@ def calc():
   elif c==10:
    e=ge("U(u)");t=gn("x");show("F",-dfx(mkf(e),t))
 
+def fit_xy():
+ n=gi("n data pts")
+ sx=sy=sxx=sxy=0
+ for i in range(n):
+  x=gn("x"+str(i+1));y=gn("y"+str(i+1))
+  sx+=x;sy+=y;sxx+=x*x;sxy+=x*y
+ den=n*sxx-sx*sx
+ if den==0:print("bad data");return
+ a=(n*sxy-sx*sy)/den
+ b=(sy-a*sx)/n
+ show("slope",a);show("intercept",b)
+
+def frq25_q1():
+ while True:
+  c=menu("2025 Q1 collision",[
+   ("momentum arrows",1),("Fmax formula",2),
+   ("v1 formula",3),("Back",0)])
+  if c==0:return
+  if c==1:
+   print("p1 before = +2*m*v0")
+   print("p2 before = -6*m*v0")
+   print("system before = -4*m*v0")
+   print("after stuck: vf=-4*v0/7")
+   print("system after = -4*m*v0")
+  elif c==2:
+   print("Use J=dp=int F(t)dt")
+   print("dp block2 = 18*m*v0/7")
+   print("int_0^tc Fmax*sin(A*t)dt")
+   print("=Fmax*(1-cos(A*tc))/A")
+   print("Fmax=18*m*v0*A/(7*(1-cos(A*tc)))")
+  elif c==3:
+   print("Conserve momentum:")
+   print("m*v1-6*m*v0=7*m*vf")
+   print("final speed v0 must be +x")
+   print("v1=13*v0")
+
+def frq25_q2():
+ while True:
+  c=menu("2025 Q2 springs",[
+   ("energy bars",1),("v at x1/2",2),
+   ("K graph friction",3),("larger mass graph",4),
+   ("Back",0)])
+  if c==0:return
+  if c==1:
+   print("At x=x1:")
+   print("UA=.5*k*x1^2")
+   print("UB=.5*(2k)*x1^2=k*x1^2")
+   print("Kblock=0")
+   print("bar ratio UA:UB:K = 1:2:0")
+  elif c==2:
+   print("Energy conserved.")
+   print("Utotal=.5*k*x^2 + .5*(2k)*x^2")
+   print("Utotal=(3/2)*k*x^2")
+   print("K at x1/2 = (9/8)*k*x1^2")
+   print("v=(3*abs(x1)/2)*sqrt(k/m)")
+  elif c==3:
+   print("K starts at 0, rises to max near x=0,")
+   print("then returns to 0 at turning points.")
+   print("With friction, each peak is smaller.")
+   print("Same period T; graph dies to K=0.")
+  elif c==4:
+   print("Larger mass: spring period increases.")
+   print("K peaks occur farther apart in time.")
+   print("Friction force mu*m*g is larger,")
+   print("so energy can be lost faster.")
+
+def frq25_q3_mu():
+ print("Use x_max vs h.")
+ print("m*g*h = mu*m*g*x_max")
+ print("x_max = h/mu, so slope=1/mu")
+ if yes("Use AP table?"):
+  hs=[.30,.45,.60,.75,.90]
+  xs=[.76,1.10,1.40,1.90,2.30]
+ else:
+  n=gi("n data pts");hs=[];xs=[]
+  for i in range(n):
+   hs.append(gn("h"+str(i+1)))
+   xs.append(gn("xmax"+str(i+1)))
+ shx=sh2=0
+ for i in range(len(hs)):
+  shx+=hs[i]*xs[i];sh2+=hs[i]*hs[i]
+ if sh2==0:print("bad data");return
+ slope=shx/sh2
+ show("slope x/h",slope)
+ show("mu",1/slope)
+ print("Equiv: graph h vs x, slope=mu.")
+
+def frq25_q3():
+ while True:
+  c=menu("2025 Q3 experiment",[
+   ("g linear graph",1),("rough graph vars",2),
+   ("mu from data",3),("generic line fit",4),
+   ("Back",0)])
+  if c==0:return
+  if c==1:
+   print("Vary release height h.")
+   print("Measure launch speed v with sensor.")
+   print("Repeat/average each h.")
+   print("Energy: m*g*h=.5*m*v^2")
+   print("Graph y=v^2 vs x=h.")
+   print("slope=2*g, so g=slope/2")
+  elif c==2:
+   print("Rough surface:")
+   print("m*g*h = mu*m*g*x_max")
+   print("Graph y=x_max vs x=h.")
+   print("slope=1/mu, so mu=1/slope")
+   print("Or graph y=h vs x=x_max; slope=mu.")
+  elif c==3:frq25_q3_mu()
+  elif c==4:fit_xy()
+
+def frq25_q4():
+ while True:
+  c=menu("2025 Q4 rolling",[
+   ("static f compare",1),("static f formula",2),
+   ("kinetic f compare",3),("Back",0)])
+  if c==0:return
+  if c==1:
+   print("fD < fR")
+   print("Ring has larger I, so it needs")
+   print("more torque to reduce rotation.")
+  elif c==2:
+   print("Use sumF=M*a, sumtau=I*alpha, a=R*alpha")
+   print("For rolling up ramp, static f is up ramp.")
+   print("f = M*g*sin(theta)*I/(I+M*R^2)")
+  elif c==3:
+   print("fD = fR")
+   print("While slipping, fk=mu_k*N.")
+   print("Same material, M, and theta -> same N")
+   print("so same kinetic friction.")
+
+def frq25():
+ while True:
+  c=menu("AP 2025 FRQ helpers",[
+   ("Q1 collision",1),("Q2 springs",2),
+   ("Q3 experiment",3),("Q4 rolling",4),
+   ("Back",0)])
+  if c==0:return
+  if c==1:frq25_q1()
+  elif c==2:frq25_q2()
+  elif c==3:frq25_q3()
+  elif c==4:frq25_q4()
+
 def main():
  while True:
   print("")
@@ -763,6 +906,7 @@ def main():
    ("Energy/Work/Power",3),("Momentum",4),
    ("Rotation",5),("Oscillations",6),
    ("Gravitation",7),("Calculus tools",8),
+   ("AP 2025 FRQ helpers",9),
    ("Quit",0)])
   if c==0:print("Done.");return
   if c==1:kin()
@@ -773,5 +917,6 @@ def main():
   elif c==6:osc()
   elif c==7:grav()
   elif c==8:calc()
+  elif c==9:frq25()
 
 main()
